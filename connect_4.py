@@ -76,8 +76,9 @@ class Game():
       y += 1
     return (x,y)
 
-  def in_bound(self, x, y):
-    return x < self.width and x >=0 and y < self.height and y >= 0
+  def in_bound(self, x, y): return x < self.width and x >=0 and y < self.height and y >= 0
+  
+  def is_checker_valid(self, x, y, player): return self.in_bound(x, y) and not self.board[y][x].is_empty and self.board[y][x].owner == player
 
   def check_winner(self, x, y):
     board = self.board
@@ -86,47 +87,44 @@ class Game():
     total = 0
     temp = 0
     
-    # Use DFS to find the 4 consecutive line of checkers
-    visited = [[False for j in range(self.width)] for i in range(self.height)]
-    deltas = [
-      (-1, -1), (0,  1), (1, -1),  
-      (-1,  0),          (1,  0),
-      (-1,  1), (0, -1), (1,  1)
-    ]
-    return self.check_winner_helper(x, y, player, visited, deltas, 1)
+    return self.check_winner_helper(x, y, player)
    
-  def check_winner_helper(self, x, y, player, visited, deltas, total):
+  def check_winner_helper(self, x, y, player):
     
-    left_diagonal_deltas = [(-1,-1), (1, 1)]
-    right_diagonal_deltas = [(1, -1), (-1,  1)]
-    vertical_deltas = [(0,  1), (0, -1),]
-    horizontal_deltas = [  (-1,  0),      (1,  0)]
-
-    board = self.board
-    checker = board[y][x]
-    deltas = deltas
-    if total == 4: return True
+    i,j = 1,1
+    count = 1
+    # check horizontal
+    while self.is_checker_valid(x+i, y, player) or self.is_checker_valid(x-j, y, player):
+      if self.is_checker_valid(x+i, y, player): count += 1; i += 1
+      if self.is_checker_valid(x-j, y, player): count += 1; j += 1
     
-    visited[y][x] = True
-    for delta in deltas:
-      dx,dy = delta[0], delta[1]
-      if self.in_bound(x+dx, y+dy) and not visited[y+dy][x+dx] and\
-         not board[y+dy][x+dx].is_empty and\
-         board[y+dy][x+dx].owner == player:
+    if count == 4: return True
+    else: count = 1; i,j = 1,1
 
-        # vertical?
-        if dx == 0: deltas = vertical_deltas
-        # horizontal?
-        elif dy == 0: deltas = horizontal_deltas
-        # left diagonal
-        elif dy == dx: deltas = left_diagonal_deltas
-        # right diagonal
-        elif abs(dy - dx) == 2: deltas = right_diagonal_deltas
+    # check vertical
+    while self.is_checker_valid(x, y+i, player) or self.is_checker_valid(x, y-j, player):
+      if self.is_checker_valid(x, y+i, player): count += 1; i += 1
+      if self.is_checker_valid(x, y-j, player): count += 1; j += 1
 
-        if self.check_winner_helper(x+dx, y+dy, player, visited, deltas, total+1):
-          return True
+    if count == 4: return True
+    else: count = 1; i,j = 1,1
 
-    visited[y][x] = False
+    # check left diagonal
+    while self.is_checker_valid(x+i, y+i, player) or self.is_checker_valid(x-j, y-j, player):
+      if self.is_checker_valid(x+i, y+i, player): count += 1; i += 1
+      if self.is_checker_valid(x-j, y-j, player): count += 1; j += 1
+    
+    if count == 4: return True
+    else: count = 1; i,j = 1,1
+
+    # check right diagonal
+    while self.is_checker_valid(x-i, y+i, player) or self.is_checker_valid(x+j, y-j, player):
+      if self.is_checker_valid(x-i, y+i, player): count += 1; i += 1
+      if self.is_checker_valid(x+j, y-j, player): count += 1; j += 1
+    
+    if count == 4: return True
+    else: count = 1; i,j = 1,1
+
     return False
 
 
